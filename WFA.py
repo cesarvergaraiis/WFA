@@ -124,6 +124,7 @@ try:
         fig.add_vline(x=datetime.now().timestamp() * 1000, line_dash="dash", line_color="red", annotation_text="Hoy")
 
         st.plotly_chart(fig, use_container_width=True)
+        st.dataframe(df_filtered[['NOMBRE', 'Team', 'Location', 'FECHA Beneficio', 'Fecha Fin', 'NOTA']], use_container_width=True)
     else:
         st.warning("No hay datos para el rango seleccionado.")
 
