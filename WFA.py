@@ -121,7 +121,7 @@ try:
         fig.update_layout(height=max(400, len(df_filtered)*35), xaxis_title="Calendario")
         
         # Línea de hoy
-        fig.add_vline(x=datetime.now().timestamp() * 500, line_dash="dash", line_color="red", annotation_text="Hoy")
+        fig.add_vline(x=datetime.now().timestamp() * 1000, line_dash="dash", line_color="red", annotation_text="Hoy")
 
         st.plotly_chart(fig, use_container_width=True)
     else:
