@@ -103,7 +103,7 @@ try:
         fig = px.timeline(
             df_filtered, 
             x_start="FECHA Beneficio", 
-            x_end="Fecha_Fin", 
+            x_end="Fecha Fin", 
             y="NOMBRE", 
             color="Team",
             text="Rango_Texto", # <--- Texto dentro de la barra
