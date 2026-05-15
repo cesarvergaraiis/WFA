@@ -87,7 +87,8 @@ try:
             df['Team'].isin(selected_teams) & 
             df['Location'].isin(selected_locations) &
             (df['FECHA Beneficio'].dt.date <= date_selection[1]) & 
-            (df['Fecha Fin'].dt.date >= date_selection[0])
+            (df['Fecha Fin'].dt.date >= date_selection[0])& 
+            (df['Fecha_Fin_Visual'].dt.date >= date_selection[0])
         )
         df_filtered = df[mask].sort_values(by='FECHA Beneficio')
     else:
@@ -97,7 +98,7 @@ try:
     if not df_filtered.empty:
         st.subheader("Cronograma WFA")
         
- #       df_filtered['Fecha_Fin_Visual'] = df_filtered['Fecha fin'] + pd.Timedelta(days=1)
+       df_filtered['Fecha_Fin_Visual'] = df_filtered['Fecha fin'] + pd.Timedelta(days=1)
         
         # Agregamos el parámetro 'text' usando la columna de rango
         fig = px.timeline(
