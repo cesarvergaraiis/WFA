@@ -87,8 +87,7 @@ try:
             df['Team'].isin(selected_teams) & 
             df['Location'].isin(selected_locations) &
             (df['FECHA Beneficio'].dt.date <= date_selection[1]) & 
-            (df['Fecha Fin'].dt.date >= date_selection[0])& 
-            (df['Fecha_Fin_Visual'].dt.date >= date_selection[0])
+            (df['Fecha Fin'].dt.date >= date_selection[0])
         )
         df_filtered = df[mask].sort_values(by='FECHA Beneficio')
     else:
