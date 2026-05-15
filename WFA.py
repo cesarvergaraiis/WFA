@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 
 # 1. Configuración de la página
 st.set_page_config(page_title="WFA", layout="wide")
-
+page_icon="👥"
 st.title("📊 SW Beneficio WFA")
-
 # URL y GIDs confirmados
 url = "https://docs.google.com/spreadsheets/d/1phPfVZrXO3reP4xoeltILvOIRmNMqhS4aQz4-601_Pk/edit"
 gid_wfa = "0"
