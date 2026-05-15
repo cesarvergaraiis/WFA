@@ -98,7 +98,7 @@ try:
     if not df_filtered.empty:
         st.subheader("Cronograma WFA")
         
-        df_filtered['Fecha_Fin_Visual'] = df['Fecha fin'] + pd.Timedelta(days=1)
+#        df_filtered['Fecha_Fin_Visual'] = df['Fecha fin'] + pd.Timedelta(days=1)
         
         # Agregamos el parámetro 'text' usando la columna de rango
         fig = px.timeline(
