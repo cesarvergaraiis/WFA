@@ -97,11 +97,13 @@ try:
     if not df_filtered.empty:
         st.subheader("Cronograma WFA")
         
+        df_plot['Fecha_Fin_Visual'] = df_plot['Fecha fin'] + pd.Timedelta(days=1)
+        
         # Agregamos el parámetro 'text' usando la columna de rango
         fig = px.timeline(
             df_filtered, 
             x_start="FECHA Beneficio", 
-            x_end="Fecha Fin", 
+            x_end="Fecha_Fin_Visual", 
             y="NOMBRE", 
             color="Team",
             text="Rango_Texto", # <--- Texto dentro de la barra
