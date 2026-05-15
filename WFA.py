@@ -5,7 +5,7 @@ import plotly.express as px
 from datetime import datetime, timedelta
 
 # 1. Configuración de la página
-st.set_page_config(page_title="Dashboard WFA - Gantt", layout="wide")
+st.set_page_config(page_title="WFA", layout="wide")
 
 st.title("📊 SW Beneficio WFA")
 
