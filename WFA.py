@@ -6,9 +6,9 @@ from datetime import datetime, timedelta
 
 # 1. Configuración de la página
 st.set_page_config(page_title="WFA", layout="wide")
-page_icon = "👥"
-st.title("📊 SW Beneficio WFA")
 
+st.title("📊 SW Beneficio WFA")
+page_icon = "👥"
 # URL y GIDs confirmados
 url = "https://docs.google.com/spreadsheets/d/1phPfVZrXO3reP4xoeltILvOIRmNMqhS4aQz4-601_Pk/edit"
 gid_wfa = "0"
@@ -87,10 +87,10 @@ try:
     if st.sidebar.button("Ver Todo"):
         st.session_state.date_range = [df['FECHA Beneficio'].min().date(), df['Fecha Fin'].max().date()]
 
-    date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range)
+    date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range,format = "DD-MM-YYYY")
 
     # 4. Creación de Pestañas Principales
-    tab1, tab2 = st.tabs(["📅 Cronograma WFA", "📊 Cantidad WFA Solicitadas"])
+    tab1, tab2 = st.tabs(["📅 Cronograma WFA", "📊 Cantidad WFA Solicitados"])
 
     # --- PESTAÑA 1: CRONOGRAMA ---
     with tab1:
