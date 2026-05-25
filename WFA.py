@@ -87,7 +87,7 @@ try:
     if st.sidebar.button("Ver Todo"):
         st.session_state.date_range = [df['FECHA Beneficio'].min().date(), df['Fecha Fin'].max().date()]
 
-    date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range,format = "DD/MMM/YYYY")
+    date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range,format = "DD/b/YYYY")
 
     # 4. Creación de Pestañas Principales
     tab1, tab2 = st.tabs(["📅 Cronograma WFA", "📊 Cantidad WFA Solicitados"])
