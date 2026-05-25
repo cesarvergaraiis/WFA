@@ -146,14 +146,20 @@ try:
         df_lists_filtered = df_lists_raw[mask_lists].copy()
         
         if not df_lists_filtered.empty:
-            # REPARACIÓN: Asegurar que no haya nulos y forzar enteros en ambas columnas clave
+            # Asegurar que no haya nulos y forzar enteros en ambas columnas clave
             df_lists_filtered['WFA tomados'] = pd.to_numeric(df_lists_filtered['WFA tomados'], errors='coerce').fillna(0).astype(int)
             df_lists_filtered['Límite WFA'] = pd.to_numeric(df_lists_filtered['Límite WFA'], errors='coerce').fillna(4).astype(int)
 
-            columnas_render = ['mail', 'Team', 'Location', 'WFA tomados', 'Límite WFA']
+            # NUEVO: Calcular el porcentaje consumido (evitando división por cero)
+            df_lists_filtered['% Consumido'] = (df_lists_filtered['WFA tomados'] / df_lists_filtered['Límite WFA']).fillna(0)
             
-            # REPARACIÓN: Extraer la lista de máximos con seguridad
-            lista_maximos = df_lists_filtered['Límite WFA'].tolist()
+            # Formatear una columna de texto descriptivo para que el usuario igual vea el número absoluto (ej: "5 de 12")
+            df_lists_filtered['Progreso Real'] = (
+                df_lists_filtered['WFA tomados'].astype(str) + " / " + df_lists_filtered['Límite WFA'].astype(str)
+            )
+
+            # Columnas organizadas para mostrar
+            columnas_render = ['mail', 'Team', 'Location', 'Progreso Real', '% Consumido']
             
             st.dataframe(
                 df_lists_filtered[columnas_render],
@@ -163,14 +169,13 @@ try:
                     "mail": st.column_config.TextColumn("Correo Electrónico"),
                     "Team": st.column_config.TextColumn("Equipo"),
                     "Location": st.column_config.TextColumn("País"),
-                    "Límite WFA": st.column_config.NumberColumn("Límite Permitido", format="%d"),
-                    "WFA tomados": st.column_config.ProgressColumn(
-                        "WFA Tomados vs Límite",
-                        help="Días consumidos sobre el total permitido por país (CL: 12, Otros: 4)",
-                        format="%d",
-                        min_value=0,
-                        # Si por alguna razón la lista falla, por defecto cae en 12 para evitar el quiebre del Canvas
-                        max_value=lista_maximos if lista_maximos else 12 
+                    "Progreso Real": st.column_config.TextColumn("Días Tomados / Límite"),
+                    "% Consumido": st.column_config.ProgressColumn(
+                        "Uso del Beneficio",
+                        help="Porcentaje consumido según el límite de su país (CL: 12 días, Otros: 4 días)",
+                        format="%.0f%%", # Muestra el porcentaje sin decimales
+                        min_value=0.0,
+                        max_value=1.0  # El máximo es 1.0 (representa el 100%)
                     )
                 }
             )
