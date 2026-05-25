@@ -146,10 +146,15 @@ try:
         df_lists_filtered = df_lists_raw[mask_lists].copy()
         
         if not df_lists_filtered.empty:
-            # Reordenar columnas para una visualización limpia
+            # REPARACIÓN: Asegurar que no haya nulos y forzar enteros en ambas columnas clave
+            df_lists_filtered['WFA tomados'] = pd.to_numeric(df_lists_filtered['WFA tomados'], errors='coerce').fillna(0).astype(int)
+            df_lists_filtered['Límite WFA'] = pd.to_numeric(df_lists_filtered['Límite WFA'], errors='coerce').fillna(4).astype(int)
+
             columnas_render = ['mail', 'Team', 'Location', 'WFA tomados', 'Límite WFA']
             
-            # Se usa st.dataframe con configuraciones avanzadas de columna
+            # REPARACIÓN: Extraer la lista de máximos con seguridad
+            lista_maximos = df_lists_filtered['Límite WFA'].tolist()
+            
             st.dataframe(
                 df_lists_filtered[columnas_render],
                 use_container_width=True,
@@ -161,16 +166,16 @@ try:
                     "Límite WFA": st.column_config.NumberColumn("Límite Permitido", format="%d"),
                     "WFA tomados": st.column_config.ProgressColumn(
                         "WFA Tomados vs Límite",
-                        help="Gradiente de días consumidos sobre el total permitido por país (CL: 12, Otros: 4)",
+                        help="Días consumidos sobre el total permitido por país (CL: 12, Otros: 4)",
                         format="%d",
                         min_value=0,
-                        # Definimos dinámicamente el máximo usando la columna 'Límite WFA'
-                        max_value=df_lists_filtered['Límite WFA'].to_list() 
+                        # Si por alguna razón la lista falla, por defecto cae en 12 para evitar el quiebre del Canvas
+                        max_value=lista_maximos if lista_maximos else 12 
                     )
                 }
             )
             
-            # Métricas de resumen rápido en la pestaña
+            # Métricas de resumen rápido
             c1, c2, c3 = st.columns(3)
             c1.metric("Total Colaboradores Filtrados", len(df_lists_filtered))
             c2.metric("Total WFA Consumidos", df_lists_filtered['WFA tomados'].sum())
