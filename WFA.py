@@ -173,7 +173,7 @@ try:
                     "% Consumido": st.column_config.ProgressColumn(
                         "Uso del Beneficio",
                         help="Porcentaje consumido según el límite de su país (CL: 12 días, Otros: 4 días)",
-                        format="%.0f%%", # Muestra el porcentaje sin decimales
+                        format="%.f%%", # Muestra el porcentaje sin decimales
                         min_value=0.0,
                         max_value=1.0  # El máximo es 1.0 (representa el 100%)
                     )
