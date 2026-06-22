@@ -162,7 +162,7 @@ try:
             # Columnas organizadas para mostrar
             columnas_render = ['mail', 'Team', 'Location', 'Progreso Real', '% Consumido']
             
-            # Dinámico: si alguien se pasa de su límite, el max_value de la barra se adapta para que no rompa Streamlit
+            # 1. Calculamos el valor máximo real de la columna para que la barra no se rompa si alguien se pasa del 100%
             max_value_progress = float(max(1.0, df_lists_filtered['% Consumido'].max()))
 
             st.dataframe(
@@ -177,9 +177,9 @@ try:
                     "% Consumido": st.column_config.ProgressColumn(
                         "Uso del Beneficio",
                         help="Porcentaje consumido según el límite de su país (CL: 12 días, Otros: 4 días)",
-                        format="%.0f%%", # Corregido para que aplique el formato porcentual nativo de Streamlit
+                        format="%.0f",  # 👈 CAMBIO CLAVE: Quitamos el '%%' del final. Streamlit multiplicará el decimal por 100 y le pondrá el % automáticamente.
                         min_value=0.0,
-                        max_value=max_value_progress
+                        max_value=max_value_progress  # 👈 CAMBIO CLAVE: Evita que valores mayores a 1.0 muestren siempre 1% o rompan la visualización
                     )
                 }
             )
