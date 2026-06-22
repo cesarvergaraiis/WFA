@@ -87,24 +87,25 @@ try:
     if st.sidebar.button("Ver Todo"):
         st.session_state.date_range = [df['FECHA Beneficio'].min().date(), df['Fecha Fin'].max().date()]
 
-    date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range,format = "DD/MM/YYYY")
+    date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range, format="DD/MM/YYYY")
 
-    # 4. Creación de Pestañas Principales
-    tab1, tab2 = st.tabs(["📅 Cronograma WFA", "📊 Cantidad WFA Solicitados"])
+    # 4. Creación de Pestañas Principales (Se agrega la Pestaña 3)
+    tab1, tab2, tab3 = st.tabs(["📅 Cronograma WFA", "📊 Cantidad WFA Solicitados", "👥 Sin Beneficio en Periodo"])
+
+    # --- FILTRADO DE CRONOGRAMA (Se calcula arriba para usarlo en Tab 1 y Tab 3) ---
+    if len(date_selection) == 2:
+        mask = (
+            df['Team'].isin(selected_teams) & 
+            df['Location'].isin(selected_locations) &
+            (df['FECHA Beneficio'].dt.date <= date_selection[1]) & 
+            (df['Fecha Fin'].dt.date >= date_selection[0])
+        )
+        df_filtered = df[mask].dropna(subset=['FECHA Beneficio', 'Fecha Fin', 'NOMBRE']).sort_values(by='FECHA Beneficio')
+    else:
+        df_filtered = pd.DataFrame()
 
     # --- PESTAÑA 1: CRONOGRAMA ---
     with tab1:
-        if len(date_selection) == 2:
-            mask = (
-                df['Team'].isin(selected_teams) & 
-                df['Location'].isin(selected_locations) &
-                (df['FECHA Beneficio'].dt.date <= date_selection[1]) & 
-                (df['Fecha Fin'].dt.date >= date_selection[0])
-            )
-            df_filtered = df[mask].dropna(subset=['FECHA Beneficio', 'Fecha Fin', 'NOMBRE']).sort_values(by='FECHA Beneficio')
-        else:
-            df_filtered = pd.DataFrame()
-
         if not df_filtered.empty:
             st.subheader("Cronograma WFA Activos")
             
@@ -150,10 +151,10 @@ try:
             df_lists_filtered['WFA tomados'] = pd.to_numeric(df_lists_filtered['WFA tomados'], errors='coerce').fillna(0).astype(int)
             df_lists_filtered['Límite WFA'] = pd.to_numeric(df_lists_filtered['Límite WFA'], errors='coerce').fillna(4).astype(int)
 
-            # NUEVO: Calcular el porcentaje consumido (evitando división por cero)
+            # Calcular el porcentaje en formato decimal (ej: 0.45 para 45%)
             df_lists_filtered['% Consumido'] = (df_lists_filtered['WFA tomados'] / df_lists_filtered['Límite WFA']).fillna(0)
             
-            # Formatear una columna de texto descriptivo para que el usuario igual vea el número absoluto (ej: "5 de 12")
+            # Formatear una columna de texto descriptivo
             df_lists_filtered['Progreso Real'] = (
                 df_lists_filtered['WFA tomados'].astype(str) + " / " + df_lists_filtered['Límite WFA'].astype(str)
             )
@@ -161,6 +162,9 @@ try:
             # Columnas organizadas para mostrar
             columnas_render = ['mail', 'Team', 'Location', 'Progreso Real', '% Consumido']
             
+            # Dinámico: si alguien se pasa de su límite, el max_value de la barra se adapta para que no rompa Streamlit
+            max_value_progress = float(max(1.0, df_lists_filtered['% Consumido'].max()))
+
             st.dataframe(
                 df_lists_filtered[columnas_render],
                 use_container_width=True,
@@ -173,9 +177,9 @@ try:
                     "% Consumido": st.column_config.ProgressColumn(
                         "Uso del Beneficio",
                         help="Porcentaje consumido según el límite de su país (CL: 12 días, Otros: 4 días)",
-                        format="%.0f%%", # Muestra el porcentaje sin decimales
+                        format="%.0f%%", # Corregido para que aplique el formato porcentual nativo de Streamlit
                         min_value=0.0,
-                        max_value=1.0  # El máximo es 1.0 (representa el 100%)
+                        max_value=max_value_progress
                     )
                 }
             )
@@ -191,6 +195,43 @@ try:
                 st.error(f"⚠️ Hay {len(en_limite)} colaborador(es) que alcanzaron o superaron su límite permitido de WFA.")
         else:
             st.warning("No hay registros en la lista que coincidan con los filtros de Team y País seleccionados.")
+
+    # --- NUEVA PESTAÑA 3: SIN BENEFICIO EN EL PERIODO ---
+    with tab3:
+        st.subheader("Personas sin WFA Activo en el Periodo Seleccionado")
+        
+        if len(date_selection) == 2:
+            st.caption(f"Periodo evaluado: **{date_selection[0].strftime('%d/%m/%Y')}** al **{date_selection[1].strftime('%d/%m/%Y')}**")
+            
+            if not df_lists_filtered.empty:
+                # Obtener lista de correos que SÍ tienen WFA en este rango de fechas
+                correos_con_wfa = df_filtered['mail'].unique()
+                
+                # Filtrar la lista general para dejar solo a los que NO están en la lista anterior
+                df_sin_wfa = df_lists_filtered[~df_lists_filtered['mail'].isin(correos_con_wfa)].copy()
+                
+                if not df_sin_wfa.empty:
+                    st.info(f"👥 Hay **{len(df_sin_wfa)}** personas que no registran días de WFA en este rango de fechas.")
+                    
+                    # Mostrar tabla resumida
+                    st.dataframe(
+                        df_sin_wfa[['mail', 'Team', 'Location', 'WFA tomados', 'Límite WFA']],
+                        use_container_width=True,
+                        hide_index=True,
+                        column_config={
+                            "mail": st.column_config.TextColumn("Correo Electrónico"),
+                            "Team": st.column_config.TextColumn("Equipo"),
+                            "Location": st.column_config.TextColumn("País"),
+                            "WFA tomados": st.column_config.NumberColumn("Total Histórico Tomado"),
+                            "Límite WFA": st.column_config.NumberColumn("Límite Permitido")
+                        }
+                    )
+                else:
+                    st.success("¡Todos los colaboradores filtrados tienen solicitudes de WFA registradas en este periodo!")
+            else:
+                st.warning("No hay colaboradores disponibles con los filtros de Equipo y País actuales.")
+        else:
+            st.warning("Por favor selecciona un rango de fechas válido en la barra lateral.")
 
 except Exception as e:
     st.error(f"Error general en la aplicación: {e}")
