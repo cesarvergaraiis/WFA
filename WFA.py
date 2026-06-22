@@ -89,10 +89,10 @@ try:
 
     date_selection = st.sidebar.date_input("Rango manual", value=st.session_state.date_range, format="DD/MM/YYYY")
 
-    # 4. Creación de Pestañas Principales (Se agrega la Pestaña 3)
+    # 4. Creación de Pestañas Principales
     tab1, tab2, tab3 = st.tabs(["📅 Cronograma WFA", "📊 Cantidad WFA Solicitados", "👥 Sin Beneficio en Periodo"])
 
-    # --- FILTRADO DE CRONOGRAMA (Se calcula arriba para usarlo en Tab 1 y Tab 3) ---
+    # --- FILTRADO DE CRONOGRAMA ---
     if len(date_selection) == 2:
         mask = (
             df['Team'].isin(selected_teams) & 
@@ -151,10 +151,10 @@ try:
             df_lists_filtered['WFA tomados'] = pd.to_numeric(df_lists_filtered['WFA tomados'], errors='coerce').fillna(0).astype(int)
             df_lists_filtered['Límite WFA'] = pd.to_numeric(df_lists_filtered['Límite WFA'], errors='coerce').fillna(4).astype(int)
 
-            # Calcular el porcentaje en formato decimal (ej: 0.45 para 45%)
-            df_lists_filtered['% Consumido'] = (df_lists_filtered['WFA tomados'] / df_lists_filtered['Límite WFA']).fillna(0)
+            # CORRECCIÓN: Multiplicamos por 100 para tener valores en escala porcentual real (ej: 45.5 en lugar de 0.455)
+            df_lists_filtered['% Consumido'] = ((df_lists_filtered['WFA tomados'] / df_lists_filtered['Límite WFA']) * 100).fillna(0)
             
-            # Formatear una columna de texto descriptivo
+            # Formatear una columna de texto descriptivo para que el usuario igual vea el número absoluto (ej: "5 de 12")
             df_lists_filtered['Progreso Real'] = (
                 df_lists_filtered['WFA tomados'].astype(str) + " / " + df_lists_filtered['Límite WFA'].astype(str)
             )
@@ -162,8 +162,8 @@ try:
             # Columnas organizadas para mostrar
             columnas_render = ['mail', 'Team', 'Location', 'Progreso Real', '% Consumido']
             
-            # 1. Calculamos el valor máximo real de la columna para que la barra no se rompa si alguien se pasa del 100%
-            max_value_progress = float(max(1.0, df_lists_filtered['% Consumido'].max()))
+            # Ajuste dinámico de la escala de la barra: mínimo escala 100, pero si alguien se pasó del límite se adapta automáticamente
+            max_value_progress = float(max(100.0, df_lists_filtered['% Consumido'].max()))
 
             st.dataframe(
                 df_lists_filtered[columnas_render],
@@ -177,9 +177,9 @@ try:
                     "% Consumido": st.column_config.ProgressColumn(
                         "Uso del Beneficio",
                         help="Porcentaje consumido según el límite de su país (CL: 12 días, Otros: 4 días)",
-                        format="%.0f",  # 👈 CAMBIO CLAVE: Quitamos el '%%' del final. Streamlit multiplicará el decimal por 100 y le pondrá el % automáticamente.
+                        format="%.0f%%",  # Ahora que la escala es de 0 a 100, formateará correctamente (ej: "42%")
                         min_value=0.0,
-                        max_value=max_value_progress  # 👈 CAMBIO CLAVE: Evita que valores mayores a 1.0 muestren siempre 1% o rompan la visualización
+                        max_value=max_value_progress
                     )
                 }
             )
@@ -196,7 +196,7 @@ try:
         else:
             st.warning("No hay registros en la lista que coincidan con los filtros de Team y País seleccionados.")
 
-    # --- NUEVA PESTAÑA 3: SIN BENEFICIO EN EL PERIODO ---
+    # --- PESTAÑA 3: SIN BENEFICIO EN EL PERIODO ---
     with tab3:
         st.subheader("Personas sin WFA Activo en el Periodo Seleccionado")
         
@@ -213,7 +213,6 @@ try:
                 if not df_sin_wfa.empty:
                     st.info(f"👥 Hay **{len(df_sin_wfa)}** personas que no registran días de WFA en este rango de fechas.")
                     
-                    # Mostrar tabla resumida
                     st.dataframe(
                         df_sin_wfa[['mail', 'Team', 'Location', 'WFA tomados', 'Límite WFA']],
                         use_container_width=True,
