@@ -72,6 +72,14 @@ try:
     selected_locations = st.sidebar.multiselect("Países", options=all_locations, default=all_locations)
 
     st.sidebar.markdown("---")
+    
+    # --- 3.1 BOTÓN PARA ACTUALIZAR DATOS EN TIEMPO REAL ---
+    st.sidebar.subheader("Sincronización")
+    if st.sidebar.button("🔄 Actualizar Datos", use_container_width=True):
+        st.cache_data.clear()  # Borra el caché de la función decorada
+        st.rerun()             # Fuerza a reiniciar la ejecución para traer los datos nuevos inmediatamente
+
+    st.sidebar.markdown("---")
     st.sidebar.subheader("Accesos Rápidos de Fecha (Cronograma)")
     
     today = datetime.now().date()
